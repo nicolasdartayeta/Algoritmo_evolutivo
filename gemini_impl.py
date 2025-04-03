@@ -1,15 +1,16 @@
 import numpy as np
 import abc # Abstract Base Classes
 import typing
+import tsplib95
 
 # --- Configuration ---
 # TODO: Load these from a config file or command-line arguments
-DEFAULT_POPULATION_SIZE = 30 # [cite: 39] Suggests 30-50
+DEFAULT_POPULATION_SIZE = 10 # [cite: 39] Suggests 30-50
 DEFAULT_TOURNAMENT_SIZE = 3  # Common practice, adjust as needed
 DEFAULT_CROSSOVER_RATE = 0.8 # [cite: 25] Suggests 0.7 or 0.8
-DEFAULT_MUTATION_RATE = 0.1  # [cite: 33] Suggests 0.05, 0.1, 0.2
+DEFAULT_MUTATION_RATE = 0.2  # [cite: 33] Suggests 0.05, 0.1, 0.2
 DEFAULT_REPLACEMENT_RATE = 0.5 # [cite: 71] Suggests 30%, 50%, 70%
-DEFAULT_MAX_GENERATIONS = 500 # [cite: 45] Suggests 200, 500, 700
+DEFAULT_MAX_GENERATIONS = 1 # [cite: 45] Suggests 200, 500, 700
 ARCHIVO_COSTOS = 'costos.csv'
 
 # --- Interfaces de las estrategias (Abstract Base Classes) ---
@@ -102,9 +103,14 @@ class CrucePMX(EstrategiaDeCruce):
         return hijos[:num_hijos] # Return only the generated offspring
 
     def _pmx_pair(self, padre_1: np.ndarray, padre_2: np.ndarray) -> np.ndarray:
-        """Funcion que realiza realiza el cruce y produce un hijo."""
+        """Funcion que realiza realiza el cruce y produce un hijo (version optimizada)."""
         tamanio = padre_1.shape[0]
-        hijo = -np.ones(tamanio, dtype=padre_1.dtype) # Initialize with -1 or another placeholder
+        hijo = -np.ones(tamanio, dtype=padre_1.dtype) # Initialize with -1
+
+        # --- Optimización: Crear mapa de posiciones para padre_2 ---
+        # Esto mapea cada ciudad en padre_2 a su índice. Costo O(N) una sola vez.
+        posicion_en_p2_map = {ciudad: indice for indice, ciudad in enumerate(padre_2)}
+        # -----------------------------------------------------------
 
         # 1. Elegir dos puntos de cruce aleatorios
         punto_cruce_1, punto_cruce_2 = sorted(self.rng.choice(tamanio, 2, replace=False))
@@ -112,34 +118,60 @@ class CrucePMX(EstrategiaDeCruce):
         # 2. Copiar segmento del padre_1 al hijo
         hijo[punto_cruce_1:punto_cruce_2+1] = padre_1[punto_cruce_1:punto_cruce_2+1]
 
-        # 3. Mapear elementos del padre_2 entre los puntos de cruce al hijo
+        # 3. Mapear y colocar elementos conflictivos de padre_2 (dentro del segmento)
         for i in range(punto_cruce_1, punto_cruce_2 + 1):
+            # Si el elemento de padre_2 NO está en el segmento ya copiado de padre_1
             if padre_2[i] not in hijo[punto_cruce_1:punto_cruce_2+1]:
-                valor_a_copiar = padre_2[i]
-                j = padre_1[i]
-                posicion_hijo = np.where(padre_2 == j)[0][0]
-                while hijo[posicion_hijo] != -1:
-                    k = hijo[posicion_hijo]
-                    posicion_hijo = np.where(padre_2 == k)[0][0]
-                
-                hijo[posicion_hijo] = valor_a_copiar
+                valor_a_copiar = padre_2[i] # Valor de p2 que necesita un lugar
+                valor_desplazado = padre_1[i] # Valor de p1 que está en el hijo en la pos i
 
-        # 4. Copiar elementos faltantes (si los hay)
+                # --- Optimización: Usar mapa para encontrar la posición ---
+                # Encontrar dónde está el valor_desplazado en padre_2 usando el mapa. Costo O(1) avg.
+                try:
+                    posicion_en_p2 = posicion_en_p2_map[valor_desplazado]
+                except KeyError:
+                     # Seguridad: El valor de p1 debería estar en p2 si son permutaciones
+                     print(f"Error Lógico: valor_desplazado {valor_desplazado} (de p1) no encontrado en el mapa de p2 {padre_2}")
+                     raise ValueError("Inconsistencia entre padres durante PMX")
+                # -------------------------------------------------------
+
+                # Buscar una posición vacía (-1) en hijo siguiendo la cadena de mapeo
+                posicion_hijo_destino = posicion_en_p2
+                while hijo[posicion_hijo_destino] != -1:
+                    valor_en_posicion_hijo = hijo[posicion_hijo_destino]
+
+                    # --- Optimización: Usar mapa para seguir la cadena ---
+                    # Encontrar dónde está este nuevo valor en padre_2 usando el mapa. Costo O(1) avg.
+                    try:
+                        posicion_hijo_destino = posicion_en_p2_map[valor_en_posicion_hijo]
+                    except KeyError:
+                         # Seguridad: El valor intermedio debería estar en p2
+                         print(f"Error Lógico: valor_en_posicion_hijo {valor_en_posicion_hijo} no encontrado en el mapa de p2 {padre_2}")
+                         raise ValueError("Inconsistencia en cadena PMX")
+                    # -------------------------------------------------------
+
+                # Colocar el valor_a_copiar en la posición vacía encontrada
+                hijo[posicion_hijo_destino] = valor_a_copiar
+
+        # 4. Llenar las posiciones restantes en el hijo con los valores de padre_2
         for i in range(tamanio):
             if hijo[i] == -1:  # Si la posición aún está vacía después del paso 3
                 hijo[i] = padre_2[i]
 
         # Verificacion
-        assert len(np.unique(hijo)) == tamanio, "PMX resulto en ciudades duplicadas"
-        assert -1 not in hijo, "PMX fallo en llenar todas las posiciones"
+        elementos_unicos = np.unique(hijo) # np.unique también ordena, útil para comparar si fuera necesario
+        assert len(elementos_unicos) == tamanio, f"PMX resulto en {len(elementos_unicos)} ciudades unicas ({tamanio} esperadas). Hijo: {hijo}, Unicos: {elementos_unicos}"
+        assert -1 not in hijo, f"PMX fallo en llenar todas las posiciones. Hijo: {hijo}"
 
         return hijo
 
 # TODO: Implement EdgeRecombinationCrossover [cite: 59]
 class EdgeRecombinationCrossover(EstrategiaDeCruce):
+     def __init__(self):
+        self.rng = np.random.default_rng()
+
      def cruzar(self, parents: np.ndarray, probabilidad_de_cruce: float) -> np.ndarray:
-         print("Warning: Edge Recombination Crossover not implemented yet. Copying parents.")
-         # Placeholder: just copy parents if crossover doesn't happen
+         
          offspring = np.empty_like(parents)
          num_offspring = 0
          for i in range(0, parents.shape[0], 2):
@@ -147,11 +179,20 @@ class EdgeRecombinationCrossover(EstrategiaDeCruce):
                  offspring[num_offspring] = parents[i].copy()
                  num_offspring += 1
                  continue
-             if np.random.rand() < probabilidad_de_cruce:
+             if self.rng.random() < probabilidad_de_cruce:
                 # Implement Edge Recombination logic here
-                # For now, just copy
-                 offspring[num_offspring] = parents[i].copy()
-                 offspring[num_offspring + 1] = parents[i+1].copy()
+                padre_a = parents[i]
+                padre_b = parents[i + 1]
+
+                tabla_adyacencias = {}
+                cantidad_ciudades = len(padre_a)
+                ciudades_idx = np.arange(cantidad_ciudades)
+                for ciudad_idx in ciudades_idx:
+                    adyacencias_a = [padre_a[ciudad_idx - 1],padre_a[(ciudad_idx + 1) % cantidad_ciudades]]
+                    adyacencias_b = [padre_b[ciudad_idx - 1],padre_b[(ciudad_idx + 1) % cantidad_ciudades]]
+
+                    tabla_adyacencias[padre_a[ciudad_idx]] = tabla_adyacencias[padre_a[ciudad_idx]] + adyacencias_a if padre_a[ciudad_idx] in tabla_adyacencias else adyacencias_a
+                    tabla_adyacencias[padre_b[ciudad_idx]] = tabla_adyacencias[padre_b[ciudad_idx]] + adyacencias_b if padre_b[ciudad_idx] in tabla_adyacencias else adyacencias_b
              else:
                  offspring[num_offspring] = parents[i].copy()
                  offspring[num_offspring + 1] = parents[i+1].copy()
@@ -160,7 +201,6 @@ class EdgeRecombinationCrossover(EstrategiaDeCruce):
 
 
 class InsertionMutation(EstrategiaDeMutacion):
-    # [cite: 64]
     def __init__(self):
         self.rng = np.random.default_rng()
 
@@ -379,7 +419,7 @@ class AlgoritmoGeneticoTSP:
 # --- Main Execution ---
 
 if __name__ == '__main__':
-    # Cargar matriz de costos
+    """ # Cargar matriz de costos
     try:
         matriz_costos = np.loadtxt(ARCHIVO_COSTOS, delimiter=',')
         print(f"Matriz de costos cargada desde el archivo '{ARCHIVO_COSTOS}' ({matriz_costos.shape[0]} ciudades).")
@@ -388,12 +428,15 @@ if __name__ == '__main__':
         exit(1)
     except Exception as e:
         print(f"Error al intentar cargar el archivo: {e}")
-        exit(1)
+        exit(1) """
 
+    matriz_costos = tsplib95.load("ALL_tsp/bays29.tsp").edge_weights
+    matriz_costos = np.array(matriz_costos)
+    
     # --- Inicializar estrategias ---
     selection = SeleccionPorTorneo(tamanio_del_torneo=DEFAULT_TOURNAMENT_SIZE)
     crossover = CrucePMX()
-    #crossover = EdgeRecombinationCrossover() # Swap to PMX easily [cite: 57, 59]
+    crossover = EdgeRecombinationCrossover() # Swap to PMX easily [cite: 57, 59]
     mutation = InversionMutation() # Swap to InsertionMutation easily [cite: 64, 66]
     mutation = InsertionMutation()
     replacement = SteadyStateReplacement(replacement_rate=DEFAULT_REPLACEMENT_RATE) # [cite: 68]
