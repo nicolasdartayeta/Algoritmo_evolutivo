@@ -1,77 +1,68 @@
 import numpy as np
+import typing
+import tsplib95
+import time
+import estrategiasCruce
+import estrategiasMutacion
+import estrategiasSeleccionPadres
+import estrategiasSeleccionSobrevivientes
+import algoritmoGenericoTSP
 
-def print_matrices():
-    print(f"Matriz de costos\n")
-    print(MATRIZ_COSTOS, f'\n')
-    print(f'Soluciones\n')
-    print(soluciones, f'\n')
-    print(f'Costos de las soluciones\n')
-    print(costo_soluciones, f'\n')
-    print(f'Fitness de las soluciones\n')
-    print(fitness_soluciones, f'\n')
+# --- Configuration ---
+# TODO: Load these from a config file or command-line arguments
+DEFAULT_POPULATION_SIZE = 50 # [cite: 39] Suggests 30-50
+DEFAULT_TOURNAMENT_SIZE = 3  # Common practice, adjust as needed
+DEFAULT_CROSSOVER_RATE = 0.8 # [cite: 25] Suggests 0.7 or 0.8
+DEFAULT_MUTATION_RATE = 0.2  # [cite: 33] Suggests 0.05, 0.1, 0.2
+DEFAULT_REPLACEMENT_RATE = 0.5 # [cite: 71] Suggests 30%, 50%, 70%
+DEFAULT_MAX_GENERATIONS = 200 # [cite: 45] Suggests 200, 500, 700
+ARCHIVO_COSTOS = 'costos.csv'
 
-def generar_soluciones_iniciales():
-    # Se general permutaciones aleatorias de ciudades
-    global soluciones
-    rng = np.random.default_rng()
+# --- Main Execution ---
 
-    for i in range(len(soluciones)):
-        soluciones[i] = rng.permutation(CANTIDAD_CIUDADES)
+if __name__ == '__main__':
+    """ # Cargar matriz de costos
+    try:
+        matriz_costos = np.loadtxt(ARCHIVO_COSTOS, delimiter=',')
+        print(f"Matriz de costos cargada desde el archivo '{ARCHIVO_COSTOS}' ({matriz_costos.shape[0]} ciudades).")
+    except FileNotFoundError:
+        print(f"Error: Archivo '{ARCHIVO_COSTOS}' no encontrado.")
+        exit(1)
+    except Exception as e:
+        print(f"Error al intentar cargar el archivo: {e}")
+        exit(1) """
 
-def calcular_costo_solucion(nro_solucion):
-    # Se calcula sumando los costos de recorrer todas las ciudades
-    costo = 0
-    for i in range(CANTIDAD_CIUDADES - 1):
-        ciudad_a = soluciones[nro_solucion][i]
-        ciudad_b = soluciones[nro_solucion][i + 1]
-        costo += MATRIZ_COSTOS[ciudad_a][ciudad_b]
+    matriz_costos = tsplib95.load("ALL_tsp/bays29.tsp").edge_weights
+    matriz_costos = np.array(matriz_costos)
+    
+    # --- Inicializar estrategias ---
+    selection = estrategiasSeleccionPadres.SeleccionPorTorneo(tamanio_del_torneo=DEFAULT_TOURNAMENT_SIZE)
+    crossover = estrategiasCruce.CrucePMX()
+    crossover = estrategiasCruce.CruceBasadoEnArcos() # Swap to PMX easily [cite: 57, 59]
+    mutation = estrategiasMutacion.InversionMutation() # Swap to InsertionMutation easily [cite: 64, 66]
+    #mutation = InsertionMutation()
+    replacement = estrategiasSeleccionSobrevivientes.SteadyStateReplacement(replacement_rate=DEFAULT_REPLACEMENT_RATE) # [cite: 68]
 
-    return costo
+    # --- Inicializar y correr el algoritmo ---
+    ga = algoritmoGenericoTSP.AlgoritmoGeneticoTSP(
+        matriz_costos=matriz_costos,
+        tamanio_poblacion=DEFAULT_POPULATION_SIZE,
+        estrategia_de_padres=selection,
+        estrategia_de_cruce=crossover,
+        estrategia_de_mutacion=mutation,
+        estrategia_de_sobrevivientes=replacement,
+        probabilidad_de_cruce=DEFAULT_CROSSOVER_RATE,
+        probabilidad_de_mutacion=DEFAULT_MUTATION_RATE,
+        cantidad_maxima_de_generaciones=DEFAULT_MAX_GENERATIONS
+    )
 
-def calcular_costos_soluciones():
-    # Para cada solucion se calcula su costo
-    global costo_soluciones
+    print("\nStarting Genetic Algorithm execution...")
+    start_time = time.perf_counter()
 
-    for i in range(len(costo_soluciones)):
-        costo_soluciones[i] = calcular_costo_solucion(i)
+    best_route, best_cost = ga.run()
 
-def calcular_fitness_soluciones():
-    # Se calcula como el reciproco del costo
-    global fitness_soluciones
+    end_time = time.perf_counter() # Get time just after running
+    elapsed_time = end_time - start_time # Calculate the difference
 
-    for i in range(len(fitness_soluciones)):
-        fitness_soluciones[i] = 1 / costo_soluciones[i]
-
-def seleccion_por_torneo(nro_integrantes_torneo):
-    padres = np.empty((TAMANO_POBLACION, MATRIZ_COSTOS.shape[0]), dtype=np.int32)
-
-    # Hay que generar todos los padres. Habra tantos torneos como padres
-    #for i in range(TAMANO_POBLACION):
-
-
-
-
-if __name__=='__main__':
-    # Definir tamaño de la poblacion.
-    # TODO que el tamaño venga de un argumento del programa o archivo de configuracion
-    TAMANO_POBLACION = 10
-
-    # TODO que el archivo de costos venga de un argumento del programa o archivo de configuracion
-    costos_file = 'costos.csv'
-
-    # Cargar costros a una matriz
-    MATRIZ_COSTOS = np.loadtxt(costos_file, delimiter=',')
-
-    # Cantidad de ciudades
-    CANTIDAD_CIUDADES = MATRIZ_COSTOS.shape[0]
-
-    # Crear matrices de solucione, fitness, y costos vacias
-    soluciones = np.empty((TAMANO_POBLACION, MATRIZ_COSTOS.shape[0]), dtype=np.int32)
-    fitness_soluciones = np.empty(TAMANO_POBLACION)
-    costo_soluciones = np.empty(TAMANO_POBLACION)
-
-    generar_soluciones_iniciales()
-    calcular_costos_soluciones()
-    calcular_fitness_soluciones()
-    print_matrices()
-    #seleccion_de_padres()
+    print(f"\nAlgorithm execution finished.")
+    print(f"Total execution time: {elapsed_time:.4f} seconds")
