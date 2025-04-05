@@ -21,25 +21,14 @@ ARCHIVO_COSTOS = 'costos.csv'
 # --- Main Execution ---
 
 if __name__ == '__main__':
-    """ # Cargar matriz de costos
-    try:
-        matriz_costos = np.loadtxt(ARCHIVO_COSTOS, delimiter=',')
-        print(f"Matriz de costos cargada desde el archivo '{ARCHIVO_COSTOS}' ({matriz_costos.shape[0]} ciudades).")
-    except FileNotFoundError:
-        print(f"Error: Archivo '{ARCHIVO_COSTOS}' no encontrado.")
-        exit(1)
-    except Exception as e:
-        print(f"Error al intentar cargar el archivo: {e}")
-        exit(1) """
-
     matriz_costos = tsplib95.load("ALL_tsp/bays29.tsp").edge_weights
     matriz_costos = np.array(matriz_costos)
     
     # --- Inicializar estrategias ---
     selection = estrategiasSeleccionPadres.SeleccionPorTorneo(tamanio_del_torneo=DEFAULT_TOURNAMENT_SIZE)
     crossover = estrategiasCruce.CrucePMX()
-    crossover = estrategiasCruce.CruceBasadoEnArcos() # Swap to PMX easily [cite: 57, 59]
-    mutation = estrategiasMutacion.InversionMutation() # Swap to InsertionMutation easily [cite: 64, 66]
+    crossover = estrategiasCruce.CruceBasadoEnArcos()
+    mutation = estrategiasMutacion.InversionMutation()
     #mutation = InsertionMutation()
     replacement = estrategiasSeleccionSobrevivientes.SteadyStateReplacement(replacement_rate=DEFAULT_REPLACEMENT_RATE) # [cite: 68]
 

@@ -34,7 +34,6 @@ class InsertionMutation(EstrategiaDeMutacion):
         return mutated_offspring
 
 class InversionMutation(EstrategiaDeMutacion):
-    # [cite: 66]
     def __init__(self):
         self.rng = np.random.default_rng()
 
