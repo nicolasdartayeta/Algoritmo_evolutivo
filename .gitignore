@@ -3,3 +3,4 @@ pyvenv.cfg
 /include
 /lib
 /share
+.DS_Store
