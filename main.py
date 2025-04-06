@@ -10,11 +10,11 @@ import math
 
 # --- Configuracion ---
 # TODO: Load these from a config file or command-line arguments
-DEFAULT_POPULATION_SIZE = 100 # [cite: 39] Suggests 30-50
+DEFAULT_POPULATION_SIZE = 50 # [cite: 39] Suggests 30-50
 DEFAULT_TOURNAMENT_SIZE = 3  # Common practice, adjust as needed
 DEFAULT_CROSSOVER_RATE = 0.8 # [cite: 25] Suggests 0.7 or 0.8
 DEFAULT_MUTATION_RATE = 0.2  # [cite: 33] Suggests 0.05, 0.1, 0.2
-DEFAULT_REPLACEMENT_RATE = 0.9 # [cite: 71] Suggests 30%, 50%, 70%
+DEFAULT_REPLACEMENT_RATE = 0.7 # [cite: 71] Suggests 30%, 50%, 70%
 DEFAULT_MAX_GENERATIONS = 500 # [cite: 45] Suggests 200, 500, 700
 ARCHIVO_COSTOS = 'costos.csv'
 
@@ -42,14 +42,17 @@ def cargar_matriz(filename) -> np.array:
 
 if __name__ == '__main__':
     matriz_costos = cargar_matriz("ALL_tsp/berlin52.tsp")
-    print(matriz_costos)
     
     # --- Inicializar estrategias ---
     selection = estrategiasSeleccionPadres.SeleccionPorTorneo(tamanio_del_torneo=DEFAULT_TOURNAMENT_SIZE)
+    selection = estrategiasSeleccionPadres.SeleccionPorRankingLineal(sp=2)
+
     crossover = estrategiasCruce.CrucePMX()
-    #crossover = estrategiasCruce.CruceBasadoEnArcos()
+    crossover = estrategiasCruce.CruceBasadoEnArcos()
+
     mutation = estrategiasMutacion.MutacionPorInversion()
     #mutation = estrategiasMutacion.MutacionPorInsersion()
+
     replacement = estrategiasSeleccionSobrevivientes.SteadyStateReplacement(replacement_rate=DEFAULT_REPLACEMENT_RATE) # [cite: 68]
 
     # --- Inicializar y correr el algoritmo ---

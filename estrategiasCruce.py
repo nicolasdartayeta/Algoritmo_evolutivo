@@ -1,6 +1,6 @@
 import abc
 from collections import Counter
-import random # Abstract Base Classes
+import random
 import numpy as np
 
 class EstrategiaDeCruce(abc.ABC):
@@ -253,7 +253,7 @@ class CruceBasadoEnArcos(EstrategiaDeCruce):
             if self.rng.random() < probabilidad_de_cruce:
                 tabla_adyacencias = self._construir_mapa_adyacencias_lista(padre_a, padre_b)
                 hijo_a = self._generar_hijo_erx(tabla_adyacencias, num_cities, cities_available)
-                hijo_b = self._generar_hijo_erx(tabla_adyacencias, num_cities, cities_available)
+                hijo_b = padre_a.copy() if self.rng.choice([0,1]) == 0 else padre_b.copy()
             else:
                 hijo_a = padre_a.copy()
                 hijo_b = padre_b.copy()

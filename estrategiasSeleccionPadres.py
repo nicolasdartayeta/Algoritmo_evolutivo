@@ -7,6 +7,34 @@ class estrategiasSeleccionPadres(abc.ABC):
         """Selecciona padres de la poblacion."""
         pass
 
+class SeleccionPorRankingLineal(estrategiasSeleccionPadres):
+    def __init__(self, sp: float):
+        assert 1.0 < sp <= 2.0, f"El parametro del cruce lineal debe estar en (1.0, 2.0]"
+        self.sp = sp
+        self.rng = np.random.default_rng()
+    
+    def seleccionar(self, poblacion: np.ndarray, fitness: np.ndarray, cantidad_de_padres: int) -> np.ndarray:
+        """Selecciona individuos de la poblacion por ranking."""
+        tamanio_poblacion = poblacion.shape[0]
+        padres_seleccionados = np.empty((cantidad_de_padres, poblacion.shape[1]), dtype=poblacion.dtype)
+
+        probabilidades = [(2 - self.sp) / tamanio_poblacion + (2 * i * (self.sp - 1)) / (tamanio_poblacion * (tamanio_poblacion - 1)) for i in range(tamanio_poblacion)]
+        proabilidades_acumuladas = np.cumsum(probabilidades)
+
+        id_peores_a_mejores = np.argsort(fitness)
+
+        for i in range(cantidad_de_padres):
+            random_number = self.rng.random()
+            j = 0
+            while random_number > proabilidades_acumuladas[j]:
+                j += 1
+
+            padres_seleccionados[i] = poblacion[id_peores_a_mejores[j]]
+
+        return padres_seleccionados
+
+
+
 class SeleccionPorTorneo(estrategiasSeleccionPadres):
     def __init__(self, tamanio_del_torneo: int):
         if tamanio_del_torneo < 2:
