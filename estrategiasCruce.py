@@ -226,8 +226,8 @@ class CruceBasadoEnArcos(EstrategiaDeCruce):
 
 
         # Verificaciones finales
-        #assert -1 not in hijo, f"ERX fallo en llenar todas las posiciones. Hijo: {hijo}"
-        #assert len(np.unique(hijo)) == num_ciudades, f"ERX produjo duplicados o faltantes ({len(np.unique(hijo))} unicos). Hijo: {hijo}"
+        assert -1 not in hijo, f"ERX fallo en llenar todas las posiciones. Hijo: {hijo}"
+        assert len(np.unique(hijo)) == num_ciudades, f"ERX produjo duplicados o faltantes ({len(np.unique(hijo))} unicos). Hijo: {hijo}"
 
         return hijo
 

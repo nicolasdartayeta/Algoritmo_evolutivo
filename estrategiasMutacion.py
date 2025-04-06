@@ -9,44 +9,44 @@ class EstrategiaDeMutacion(abc.ABC):
         pass
 
 
-class InsertionMutation(EstrategiaDeMutacion):
+class MutacionPorInsersion(EstrategiaDeMutacion):
     def __init__(self):
         self.rng = np.random.default_rng()
 
-    def mutar(self, offspring: np.ndarray, probabilidad_de_mutacion: float) -> np.ndarray:
-        mutated_offspring = offspring.copy()
-        num_offspring, cantidad_ciudades = mutated_offspring.shape
+    def mutar(self, hijos: np.ndarray, probabilidad_de_mutacion: float) -> np.ndarray:
+        hijos_mutados = hijos.copy()
+        cantidad_de_hijos, cantidad_ciudades = hijos_mutados.shape
 
-        for i in range(num_offspring):
+        for i in range(cantidad_de_hijos):
             if self.rng.random() < probabilidad_de_mutacion:
-                # Select a city to move
-                idx_to_move = self.rng.integers(0, cantidad_ciudades)
-                city_to_move = mutated_offspring[i, idx_to_move]
+                # Seleccionar una ciudad al azar
+                idx_ciudad_a_mover = self.rng.integers(0, cantidad_ciudades)
+                ciudad_a_mover = hijos_mutados[i, idx_ciudad_a_mover]
 
-                # Delete it from its original position
-                temp_route = np.delete(mutated_offspring[i], idx_to_move)
+                # Eliminarla de su posicino original
+                ruta_temporal = np.delete(hijos_mutados[i], idx_ciudad_a_mover)
 
-                # Select a new position to insert
-                insert_pos = self.rng.integers(0, cantidad_ciudades) # Can insert at the end
+                # Seleccionar una posicion para insertarla
+                posicion_de_insercion = self.rng.integers(0, cantidad_ciudades) # Can insert at the end
 
-                # Insert the city
-                mutated_offspring[i] = np.insert(temp_route, insert_pos, city_to_move)
-        return mutated_offspring
+                # Insertarla
+                hijos_mutados[i] = np.insert(ruta_temporal, posicion_de_insercion, ciudad_a_mover)
+        return hijos_mutados
 
-class InversionMutation(EstrategiaDeMutacion):
+class MutacionPorInversion(EstrategiaDeMutacion):
     def __init__(self):
         self.rng = np.random.default_rng()
 
-    def mutar(self, offspring: np.ndarray, probabilidad_de_mutacion: float) -> np.ndarray:
-        mutated_offspring = offspring.copy()
-        num_offspring, cantidad_ciudades = mutated_offspring.shape
+    def mutar(self, hijos: np.ndarray, probabilidad_de_mutacion: float) -> np.ndarray:
+        hijos_mutados = hijos.copy()
+        cantidad_de_hijos, cantidad_ciudades = hijos_mutados.shape
 
-        for i in range(num_offspring):
+        for i in range(cantidad_de_hijos):
             if self.rng.random() < probabilidad_de_mutacion:
-                # Select two indices for the subarray
+                # Seleccionar dos ciudades
                 idx1, idx2 = sorted(self.rng.choice(cantidad_ciudades, 2, replace=False))
 
-                # Reverse the segment between idx1 and idx2 (inclusive)
-                mutated_offspring[i, idx1:idx2+1] = mutated_offspring[i, idx1:idx2+1][::-1]
+                # Invertir el segmento entre las dos ciudades (incluyendo a las ciudades)
+                hijos_mutados[i, idx1:idx2+1] = hijos_mutados[i, idx1:idx2+1][::-1]
 
-        return mutated_offspring
+        return hijos_mutados
