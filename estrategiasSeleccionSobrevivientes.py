@@ -7,11 +7,24 @@ class EstrategiaDeSeleccionDeSobrevivientes(abc.ABC):
         """Reemplaza individuos de la poblacion actual por los hijos."""
         pass
 
-class SteadyStateReplacement(EstrategiaDeSeleccionDeSobrevivientes):
+class ReemplazoGeneracional(EstrategiaDeSeleccionDeSobrevivientes):
+    def __init__(self):
+        pass
+
+    def __str__(self):
+        return "Reemplazo generacional"
+
+    def reemplazar(self, poblacion: np.ndarray, fitness: np.ndarray, hijos: np.ndarray, fitness_hijos: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+        return hijos, fitness_hijos
+
+class ReemplazoSteadyState(EstrategiaDeSeleccionDeSobrevivientes):
     def __init__(self, replacement_rate: float):
         if not 0.0 <= replacement_rate <= 1.0:
             raise ValueError("Replacement rate must be between 0 and 1.")
         self.replacement_rate = replacement_rate
+
+    def __str__(self):
+        return f"Reemplazo Steady State con porcentaje {self.replacement_rate}"
 
     def reemplazar(self, poblacion: np.ndarray, fitness: np.ndarray, hijos: np.ndarray, fitness_hijos: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
         """Reemplaza el n% peor de la poblacion actual con el n% mejor de los hijos creados."""

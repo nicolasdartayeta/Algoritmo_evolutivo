@@ -15,7 +15,8 @@ class AlgoritmoGeneticoTSP:
                  estrategia_de_sobrevivientes: estrategiasSeleccionSobrevivientes.EstrategiaDeSeleccionDeSobrevivientes,
                  probabilidad_de_cruce: float,
                  probabilidad_de_mutacion: float,
-                 cantidad_maxima_de_generaciones: int):
+                 cantidad_maxima_de_generaciones: int,
+                 logs: bool = False):
 
         self.matriz_costos = matriz_costos
         self.cantidad_ciudades = matriz_costos.shape[0]
@@ -36,6 +37,20 @@ class AlgoritmoGeneticoTSP:
         self.mejor_fitness = -np.inf
         self.mejor_costo = np.inf
         self.rng = np.random.default_rng()
+        self.logs = logs
+
+    def __str__(self):
+        mensaje = f"\nConfiguracion del algoritmo:\n"
+        mensaje += f"Tamaño poblacion: {self.tamanio_poblacion}\n"
+        mensaje += f"Probabilidad de cruce: {self.probabilidad_de_cruce}\n"
+        mensaje += f"Probabilidad de mutacion: {self.probabilidad_de_mutacion}\n"
+        mensaje += f"Cantidad de generaciones: {self.cantidad_maxima_de_generaciones}\n"
+        mensaje += f"Operador de seleccion: {self.estrategia_de_padres}\n"
+        mensaje += f"Operador de cruce: {self.estrategia_de_cruce}\n"
+        mensaje += f"Operador de mutacion: {self.estrategia_de_mutacion}\n"
+        mensaje += f"Operador de reemplazo: {self.estrategia_de_sobrevivientes}\n"
+
+        return mensaje
 
     def _inicializar_poblacion(self):
         """Se generan permutaciones aleatorias de ciudades."""
@@ -82,7 +97,8 @@ class AlgoritmoGeneticoTSP:
              self.mejor_solucion = self.poblacion[id_mejor_solucion].copy()
              self.mejor_fitness = self.fitness[id_mejor_solucion]
              self.mejor_costo = self.costos[id_mejor_solucion]
-             print(f"Generacion 0: Mejor costo = {self.mejor_costo:.2f}")
+             if self.logs:
+                print(f"Generacion 0: Mejor costo = {self.mejor_costo:.2f}")
         else:
              print("Advertencia: No se puede correr el algoritmo con una población de tamaño 0.")
              return None, np.inf # Early return por la advertencia.
@@ -132,13 +148,14 @@ class AlgoritmoGeneticoTSP:
                 self.mejor_solucion = self.poblacion[id_mejor_solucion].copy()
                 self.mejor_costo = self.costos[id_mejor_solucion]
 
-            if generacion % 50 == 0 or generacion == self.cantidad_maxima_de_generaciones: # Mostrar progreso del algoritmo
-                 print(f"Generación {generacion}: Mejor costo = {self.mejor_costo:.2f}. Tamaño de la poblacion: {len(self.poblacion)}")
+            if self.logs and (generacion % 50 == 0 or generacion == self.cantidad_maxima_de_generaciones): # Mostrar progreso del algoritmo
+                print(f"Generación {generacion}: Mejor costo = {self.mejor_costo:.2f}. Tamaño de la poblacion: {len(self.poblacion)}")
+                pass
 
-
-        print("\n--- Algoritmo finalizado ---")
-        print(f"Mejor solucion encontrada: {self.mejor_solucion}")
-        print(f"Mejor costo: {self.mejor_costo:.2f}")
-        print(f"Mejor fitness: {self.mejor_fitness:.6f}")
+        if self.logs:
+            print("\n--- Algoritmo finalizado ---")
+            print(f"Mejor solucion encontrada: {self.mejor_solucion}")
+            print(f"Mejor costo: {self.mejor_costo:.2f}")
+            print(f"Mejor fitness: {self.mejor_fitness:.6f}")
 
         return self.mejor_solucion, self.mejor_costo

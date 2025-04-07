@@ -12,6 +12,9 @@ class SeleccionPorRankingLineal(estrategiasSeleccionPadres):
         assert 1.0 < sp <= 2.0, f"El parametro del cruce lineal debe estar en (1.0, 2.0]"
         self.sp = sp
         self.rng = np.random.default_rng()
+
+    def __str__(self):
+        return f"Selección por ranking lineal con parametro {self.sp}"
     
     def seleccionar(self, poblacion: np.ndarray, fitness: np.ndarray, cantidad_de_padres: int) -> np.ndarray:
         """Selecciona individuos de la poblacion por ranking."""
@@ -41,6 +44,9 @@ class SeleccionPorTorneo(estrategiasSeleccionPadres):
             raise ValueError("El tamaño del torneo debe ser por lo menos de 2.")
         self.tamanio_del_torneo = tamanio_del_torneo
         self.rng = np.random.default_rng()
+
+    def __str__(self):
+        return f"Seleeción por torneo con tamaño del torneo {self.tamanio_del_torneo}"
 
     def seleccionar(self, poblacion: np.ndarray, fitness: np.ndarray, cantidad_de_padres: int) -> np.ndarray:
         """Seleccion padres por torneos de tamanio_del_torneo tamaño."""

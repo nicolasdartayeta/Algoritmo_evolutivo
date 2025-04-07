@@ -13,6 +13,9 @@ class MutacionPorInsersion(EstrategiaDeMutacion):
     def __init__(self):
         self.rng = np.random.default_rng()
 
+    def __str__(self):
+        return f"Mutación por inserción"
+    
     def mutar(self, hijos: np.ndarray, probabilidad_de_mutacion: float) -> np.ndarray:
         hijos_mutados = hijos.copy()
         cantidad_de_hijos, cantidad_ciudades = hijos_mutados.shape
@@ -36,6 +39,9 @@ class MutacionPorInsersion(EstrategiaDeMutacion):
 class MutacionPorInversion(EstrategiaDeMutacion):
     def __init__(self):
         self.rng = np.random.default_rng()
+
+    def __str__(self):
+        return f"Mutación por inversión"
 
     def mutar(self, hijos: np.ndarray, probabilidad_de_mutacion: float) -> np.ndarray:
         hijos_mutados = hijos.copy()

@@ -13,6 +13,9 @@ class CrucePMX(EstrategiaDeCruce):
     def __init__(self):
         self.rng = np.random.default_rng()
 
+    def __str__(self):
+        return f"Cruce PMX"
+
     def cruzar(self, padres: np.ndarray, probabilidad_de_cruce: float) -> np.ndarray:
         cantidad_padres, cantidad_ciudades = padres.shape
         hijos = np.empty_like(padres)
@@ -109,6 +112,9 @@ class CrucePMX(EstrategiaDeCruce):
 class CruceBasadoEnArcos(EstrategiaDeCruce):
     def __init__(self):
         self.rng = np.random.default_rng() # Para la probabilidad de cruce
+
+    def __str__(self):
+        return f"Cruce basado en arcos"
 
     def _construir_mapa_adyacencias_lista(self, p1: np.ndarray, p2: np.ndarray) -> dict[int, list]:
         """Construye el mapa de adyacencias usando LISTAS para vecinos."""
