@@ -4,3 +4,4 @@ pyvenv.cfg
 /lib
 /share
 .DS_Store
+.idea
