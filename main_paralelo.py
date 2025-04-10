@@ -110,7 +110,7 @@ def get_operator_desc(op):
 # --- Ejecucion principal ---
 if __name__ == '__main__':
     # --- Configuration ---
-    TSP_FILE = "ALL_tsp/bays29.tsp" # Example file
+    TSP_FILE = "ALL_tsp/berlin52.tsp" # Example file
     matriz_costos = cargar_matriz(TSP_FILE)
     num_ciudades = matriz_costos.shape[0]
 
