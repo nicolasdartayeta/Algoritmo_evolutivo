@@ -5,3 +5,5 @@ pyvenv.cfg
 /share
 .DS_Store
 .idea
+/_pycache_
+/Scripts

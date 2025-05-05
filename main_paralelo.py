@@ -20,13 +20,13 @@ def cargar_matriz(filename) -> np.ndarray:
     problem = tsplib95.load(filename, special=calcular_distancia)
 
     if problem.is_weighted():
-        if problem.edge_data_format != "FULL_MATRIX":
+        if problem.edge_weight_format != "FULL_MATRIX":
             matriz_costos = np.empty(shape=(problem.dimension, problem.dimension))
             for ciudad1 in range(problem.dimension):
                 for ciudad2 in range(problem.dimension):
                     matriz_costos[ciudad1][ciudad2] = problem.get_weight(ciudad1 + 1, ciudad2 + 1)
         else:
-            matriz_costos = np.arrayy(problem.edge_weights)
+            matriz_costos = np.array(problem.edge_weights)
     else:
         raise ValueError("El archivo especificado no tiene caminos con costo.")
 
@@ -110,7 +110,7 @@ def get_operator_desc(op):
 # --- Ejecucion principal ---
 if __name__ == '__main__':
     # --- Configuration ---
-    TSP_FILE = "ALL_tsp/berlin52.tsp" # Example file
+    TSP_FILE = "ALL_tsp/p43.atsp" # Example file
     matriz_costos = cargar_matriz(TSP_FILE)
     num_ciudades = matriz_costos.shape[0]
 

@@ -210,7 +210,7 @@ if __name__ == "__main__":
              sys.exit(1)
 
 
-    db_file = "ga_benchmark_data.db" # Name for the SQLite database file
+    db_file = "ga_benchmark_data_p43.db" # Name for the SQLite database file
     # --------------------
 
     print(f"Parsing benchmark data from '{input_txt_file}'...")
